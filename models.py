@@ -30,6 +30,7 @@ class User(db.Model):
 class Message(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)  # Allow NULL for system messages
     bot_name = db.Column(db.String(50), nullable=False)
     content = db.Column(db.Text, nullable=False)
     is_user_message = db.Column(db.Boolean, default=True)
