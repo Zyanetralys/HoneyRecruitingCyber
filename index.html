@@ -1,0 +1,304 @@
+{% extends "base.html" %}
+
+{% block title %}Analytics Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>
+            <i class="fas fa-chart-bar me-3"></i>Analytics Dashboard
+        </h2>
+        <div class="text-muted">
+            <i class="fas fa-clock me-1"></i>
+            Last updated: <span id="lastUpdated">Just now</span>
+        </div>
+    </div>
+    
+    <!-- Stats Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <div class="display-6 text-primary mb-2">{{ total_users }}</div>
+                    <h6 class="card-title">Total Users</h6>
+                    <small class="text-muted">Active community members</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <div class="display-6 text-info mb-2">{{ total_messages }}</div>
+                    <h6 class="card-title">Messages</h6>
+                    <small class="text-muted">Total conversations</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <div class="display-6 text-success mb-2">{{ total_keywords }}</div>
+                    <h6 class="card-title">Keywords Detected</h6>
+                    <small class="text-muted">Technical terms identified</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <div class="display-6 text-warning mb-2">
+                        {{ top_users|length }}
+                    </div>
+                    <h6 class="card-title">Skilled Users</h6>
+                    <small class="text-muted">Users with technical knowledge</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Charts Row -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-chart-pie me-2"></i>Skill Distribution
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="skillChart" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-chart-doughnut me-2"></i>Keyword Categories
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="keywordChart" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-chart-line me-2"></i>Activity Trend
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="activityChart" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Data Tables Row -->
+    <div class="row g-4">
+        <!-- Top Users -->
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">
+                        <i class="fas fa-trophy me-2"></i>Top Skilled Users
+                    </h6>
+                    <span class="badge bg-primary">{{ top_users|length }} users</span>
+                </div>
+                <div class="card-body">
+                    {% if top_users %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Rank</th>
+                                    <th>User</th>
+                                    <th>Score</th>
+                                    <th>Level</th>
+                                    <th>Last Active</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in top_users %}
+                                <tr>
+                                    <td>
+                                        <span class="fw-bold">{{ loop.index }}</span>
+                                        {% if loop.index <= 3 %}
+                                        <i class="fas fa-medal text-warning ms-1"></i>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar-sm bg-primary rounded-circle d-flex align-items-center justify-content-center me-2">
+                                                <i class="fas fa-user text-white"></i>
+                                            </div>
+                                            <span class="fw-medium">{{ user.username }}</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">{{ user.total_score }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge 
+                                            {% if user.skill_level == 'Avanzado' %}bg-success
+                                            {% elif user.skill_level == 'Intermedio' %}bg-warning
+                                            {% else %}bg-secondary{% endif %}">
+                                            {{ user.skill_level }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">
+                                            {{ user.last_active.strftime('%m/%d %H:%M') }}
+                                        </small>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-users fs-1 mb-3"></i>
+                        <p>No skilled users identified yet</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Keyword Statistics -->
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">
+                        <i class="fas fa-tags me-2"></i>Keyword Statistics
+                    </h6>
+                    <span class="badge bg-success">{{ keyword_stats|length }} categories</span>
+                </div>
+                <div class="card-body">
+                    {% if keyword_stats %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Category</th>
+                                    <th>Detections</th>
+                                    <th>Total Points</th>
+                                    <th>Popularity</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for stat in keyword_stats %}
+                                <tr>
+                                    <td>
+                                        <span class="fw-medium">{{ stat[0] }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-primary">{{ stat[1] }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">{{ stat[2] }}</span>
+                                    </td>
+                                    <td>
+                                        <div class="progress" style="height: 8px;">
+                                            <div class="progress-bar bg-success" 
+                                                 style="width: {{ (stat[1] / keyword_stats[0][1] * 100) if keyword_stats else 0 }}%">
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-tags fs-1 mb-3"></i>
+                        <p>No keywords detected yet</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Activity -->
+    <div class="row g-4 mt-2">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-history me-2"></i>Recent Activity
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% if recent_messages %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Time</th>
+                                    <th>User</th>
+                                    <th>Bot</th>
+                                    <th>Message Preview</th>
+                                    <th>Score</th>
+                                    <th>User Level</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for message, user in recent_messages %}
+                                <tr>
+                                    <td>
+                                        <small class="text-muted">
+                                            {{ message.timestamp.strftime('%m/%d %H:%M:%S') }}
+                                        </small>
+                                    </td>
+                                    <td>
+                                        <span class="fw-medium">{{ user.username }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary">{{ message.bot_name }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="text-truncate d-inline-block" style="max-width: 300px;">
+                                            {{ message.content[:50] }}{% if message.content|length > 50 %}...{% endif %}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if message.score_added > 0 %}
+                                        <span class="badge bg-success">+{{ message.score_added }}</span>
+                                        {% else %}
+                                        <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge 
+                                            {% if user.skill_level == 'Avanzado' %}bg-success
+                                            {% elif user.skill_level == 'Intermedio' %}bg-warning
+                                            {% else %}bg-secondary{% endif %}">
+                                            {{ user.skill_level }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-comments fs-1 mb-3"></i>
+                        <p>No recent activity</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}
